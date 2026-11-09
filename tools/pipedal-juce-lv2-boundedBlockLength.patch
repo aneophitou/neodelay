@@ -1,0 +1,39 @@
+--- a/modules/juce_audio_plugin_client/juce_audio_plugin_client_LV2.cpp
++++ b/modules/juce_audio_plugin_client/juce_audio_plugin_client_LV2.cpp
+@@ -1185,14 +1185,14 @@
+               "\t\ta doap:Version ;\n"
+               "\t\tdoap:revision \"" JucePlugin_VersionString "\" ;\n"
+               "\t] ;\n"
+               "\tlv2:optionalFeature\n"
+-              "\t\tlv2:hardRTCapable ;\n"
++              "\t\tlv2:hardRTCapable ,\n"
++              "\t\tbufs:boundedBlockLength ;\n"
+               "\tlv2:extensionData\n"
+               "\t\tstate:interface ;\n"
+               "\tlv2:requiredFeature\n"
+               "\t\turid:map ,\n"
+-              "\t\topts:options ,\n"
+-              "\t\tbufs:boundedBlockLength ;\n";
++              "\t\topts:options ;\n";
+ 
+         for (const auto isInput : { true, false })
+         {
+@@ -1424,12 +1424,11 @@
+                 jassertfalse;
+                 return nullptr;
+             }
+ 
++            // PipeDal (and some other headless hosts) advertise block-size via
++            // opts:options but do not pass bufs:boundedBlockLength as a feature URI.
++            // Do not hard-fail; options still supply maxBlockLength.
+             const auto boundedBlockLength = hasFeature (features, LV2_BUF_SIZE__boundedBlockLength);
+-
+-            if (! boundedBlockLength)
+-            {
+-                // The host doesn't provide the 'bounded block length' feature
+-                jassertfalse;
+-                return nullptr;
+-            }
++            juce::ignoreUnused (boundedBlockLength);
+ 
+             const auto* options = findMatchingFeatureData<const LV2_Options_Option*> (features, LV2_OPTIONS__options);
